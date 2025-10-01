@@ -1,0 +1,26 @@
+node_modules
+.env
+public/uploads/*
+
+
+backend-exporthills/
+│── server.js
+│── config/
+│   └── db.js
+│── models/
+│   ├── Category.js
+│   ├── Product.js
+│   └── Contact.js
+│── routes/
+│   ├── categoryRoutes.js
+│   ├── productRoutes.js
+│   └── contactRoutes.js
+│── controllers/
+│   ├── categoryController.js
+│   ├── productController.js
+│   └── contactController.js
+│── middleware/
+│   └── uploadMiddleware.js
+│── .env
+│── package.json
+
