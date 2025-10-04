@@ -17,7 +17,7 @@ export const sendMessage = async (req, res) => {
 
     // 2. Send email using Resend API
     await resend.emails.send({
-      from: "ExportHills <onboarding@resend.dev>",
+      from: "ExportHills <sales@exporthillsglobal.com>",
       to: process.env.CONTACT_EMAIL,
       subject: "📩 New Contact Form Submission",
       html: `
