@@ -14,43 +14,36 @@ connectDB();
 
 const app = express();
 
-// ---------------------------
-// ✅ Proper CORS Configuration
-// ---------------------------
+// --------------------------------------
+// ✅ CORS CONFIGURATION (WORKS WITH FRONTEND)
+// --------------------------------------
 app.use(cors({
-  origin: [
-    "https://exporthillsglobal.com", // your frontend (cPanel)
-    "http://localhost:5173"          // optional: local dev
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
+  origin: "https://exporthillsglobal.com",  // your live frontend domain
+  credentials: true,                        // allow cookies/auth headers if needed
 }));
 
-// ✅ Handle preflight OPTIONS requests
-app.options("*", cors());
-
-// ---------------------------
-// ✅ Middleware
-// ---------------------------
+// --------------------------------------
+// ✅ MIDDLEWARE
+// --------------------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ---------------------------
-// ✅ File Serving (Static)
+// --------------------------------------
+// ✅ STATIC FILES (IMAGES, UPLOADS, ETC.)
+// --------------------------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.resolve(__dirname, "./public/uploads")));
 
-// ---------------------------
-// ✅ Routes
-// ---------------------------
+// --------------------------------------
+// ✅ ROUTES
+// --------------------------------------
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/contact", contactRoutes);
 
-// ---------------------------
-// ✅ Server Start
-// ---------------------------
+// --------------------------------------
+// ✅ SERVER START
+// --------------------------------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
