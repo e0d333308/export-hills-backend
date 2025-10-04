@@ -1,7 +1,5 @@
 node_modules
 .env
-public/uploads/*
-
 
 backend-exporthills/
 │── server.js
