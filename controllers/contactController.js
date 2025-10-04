@@ -1,5 +1,7 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import Contact from "../models/Contact.js";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendMessage = async (req, res) => {
   const { name, email, message } = req.body;
@@ -13,18 +15,9 @@ export const sendMessage = async (req, res) => {
     const newMessage = new Contact({ name, email, message });
     await newMessage.save();
 
-    // 2. Gmail SMTP using App Password
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    // 3. Send email
-    await transporter.sendMail({
-      from: `"ExportHills Contact" <${process.env.SMTP_USER}>`,
+    // 2. Send email using Resend API
+    await resend.emails.send({
+      from: "ExportHills <onboarding@resend.dev>",
       to: process.env.CONTACT_EMAIL,
       subject: "📩 New Contact Form Submission",
       html: `
@@ -44,6 +37,9 @@ export const sendMessage = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Contact form error:", err);
-    res.status(500).json({ error: "Failed to process message", details: err.message });
+    res.status(500).json({
+      error: "Failed to process message",
+      details: err.message,
+    });
   }
 };
