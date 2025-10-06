@@ -42,6 +42,11 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/contact", contactRoutes);
 
+
+app.get("/api/status", (req, res) => {
+  res.status(200).json({ success: true, message: "Backend active and running 🚀" });
+});
+
 // --------------------------------------
 // ✅ SERVER START
 // --------------------------------------
