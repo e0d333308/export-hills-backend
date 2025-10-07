@@ -18,9 +18,13 @@ const app = express();
 // ✅ CORS CONFIGURATION (WORKS WITH FRONTEND)
 // --------------------------------------
 app.use(cors({
-  origin: "https://exporthillsglobal.com",  // your live frontend domain
-  credentials: true,                        // allow cookies/auth headers if needed
+  origin: [
+    "https://exporthillsglobal.com",
+    "https://www.exporthillsglobal.com"
+  ],
+  credentials: true,
 }));
+
 
 // --------------------------------------
 // ✅ MIDDLEWARE
