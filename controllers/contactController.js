@@ -1,8 +1,12 @@
+// controllers/contactController.js
 import { Resend } from "resend";
 import Contact from "../models/Contact.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// ✅ SEND MESSAGE (existing function)
 export const sendMessage = async (req, res) => {
   const { name, email, message } = req.body;
 
@@ -10,7 +14,6 @@ export const sendMessage = async (req, res) => {
     return res.status(400).json({ error: "All fields are required" });
   }
 
-  // Define subject variants
   const subjects = [
     "New Contact Form Submission",
     "You've received a message from ExportHills",
@@ -18,11 +21,8 @@ export const sendMessage = async (req, res) => {
     "ExportHills: New inquiry received",
     "A new message just arrived"
   ];
-  
-  // Pick a random subject
   const subject = subjects[Math.floor(Math.random() * subjects.length)];
-  
-  // Define dynamic headers for each email
+
   const preHeaders = [
     `Message received at ${new Date().toLocaleTimeString()}`,
     `This was sent by ${name}`,
@@ -30,19 +30,18 @@ export const sendMessage = async (req, res) => {
     `${name} used the contact form`,
     `Received from ${email}`
   ];
-  
   const preHeader = preHeaders[Math.floor(Math.random() * preHeaders.length)];
-  
+
   try {
-    // Save in DB
+    // Save to DB
     const newMessage = new Contact({ name, email, message });
     await newMessage.save();
 
-    // Send email with dynamic subject and header
+    // Send notification email
     await resend.emails.send({
       from: "ExportHills <sales@exporthillsglobal.com>",
       to: process.env.CONTACT_EMAIL,
-      subject: subject,
+      subject,
       html: `
         ${preHeader}
         <h2>New Contact Form Submission</h2>
@@ -75,3 +74,29 @@ export const sendMessage = async (req, res) => {
     });
   }
 };
+
+// ✅ NEW — GET ALL CONTACT MESSAGES
+export const getMessages = async (req, res) => {
+  try {
+    const messages = await Contact.find().sort({ createdAt: -1 });
+    res.status(200).json(messages);
+  } catch (err) {
+    console.error("Error fetching messages:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ NEW — DELETE A CONTACT MESSAGE
+export const deleteMessage = async (req, res) => {
+  try {
+    const contact = await Contact.findByIdAndDelete(req.params.id);
+    if (!contact) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    res.json({ message: "Message deleted successfully!" });
+  } catch (err) {
+    console.error("Error deleting message:", err);
+    res.status(500).json({ message: "Server error while deleting message" });
+  }
+};
+
