@@ -1,32 +1,56 @@
+// middleware/uploadMiddleware.js
+
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-// 🟢 Ensure uploads folder exists
+// ===========================
+// 🔹 1. LOCAL STORAGE
+// ===========================
 const uploadDir = path.join(process.cwd(), "public", "uploads");
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// 🟡 Configure storage
-const storage = multer.diskStorage({
+const localStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    // 🧹 Fix spaces & unsafe characters in filenames
-    const cleanName = file.originalname.replace(/\s+/g, "_"); // "PVC Granunels.webp" → "PVC_Granunels.webp"
-    const uniqueName = `${Date.now()}-${cleanName}`;
-    cb(null, uniqueName);
+    const clean = file.originalname.replace(/\s+/g, "_");
+    cb(null, Date.now() + "-" + clean);
   },
 });
 
-// ✅ Allow only image types (JPEG, PNG, WEBP)
-const fileFilter = (req, file, cb) => {
-  const allowed = ["image/jpeg", "image/png", "image/webp"];
-  if (allowed.includes(file.mimetype)) cb(null, true);
-  else cb(new Error("Invalid file type. Only JPEG, PNG, WEBP are allowed."), false);
-};
+// ===========================
+// 🔹 2. CLOUDINARY STORAGE
+// ===========================
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_KEY,
+  api_secret: process.env.CLOUD_SECRET,
+});
 
-// 🚀 Final multer setup
-const upload = multer({ storage, fileFilter });
+const cloudStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    return {
+      folder: "exportHills",
+      resource_type: "image",
+      format: "webp",
+      public_id: Date.now() + "-" + file.originalname.replace(/\s+/g, "_"),
+    };
+  },
+});
 
-export default upload;
+// ===========================
+// 🔹 3. EXPORT FINAL UPLOADERS
+// ===========================
+export const uploadLocal = multer({
+  storage: localStorage,
+});
+
+export const uploadCloud = multer({
+  storage: cloudStorage,
+});

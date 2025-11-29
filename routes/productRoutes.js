@@ -8,18 +8,28 @@ import {
   getProductsByCategory,
 } from "../controllers/productController.js";
 import { protectAdmin } from "../middleware/authMiddleware.js";
-import upload from "../middleware/uploadMiddleware.js"; // ✅ Import
+import { uploadLocal, uploadCloud } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-// Public
+// Public Routes
 router.get("/", getProducts);
 router.get("/category/:categoryId", getProductsByCategory);
 router.get("/:id", getProductById);
 
 // Admin CRUD
-router.post("/", protectAdmin, upload.single("image"), createProduct);
-router.put("/:id", protectAdmin, upload.single("image"), updateProduct);
+router.post("/", protectAdmin, (req, res, next) => {
+  req.query.cloud === "true"
+    ? uploadCloud.single("image")(req, res, next)
+    : uploadLocal.single("image")(req, res, next);
+}, createProduct);
+
+router.put("/:id", protectAdmin, (req, res, next) => {
+  req.query.cloud === "true"
+    ? uploadCloud.single("image")(req, res, next)
+    : uploadLocal.single("image")(req, res, next);
+}, updateProduct);
+
 router.delete("/:id", protectAdmin, deleteProduct);
 
 export default router;

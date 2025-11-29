@@ -11,6 +11,21 @@ const safeJSONParse = (value, fallback = []) => {
   }
 };
 
+// Helper → detect if file came from Cloudinary
+const getImagePath = (req, fallbackImage) => {
+  if (req.file) {
+    // If Cloudinary
+    if (req.query.cloud === "true" && req.file.path) {
+      return req.file.path; // This is Cloudinary URL
+    }
+
+    // If Local upload
+    return `/uploads/${req.file.filename}`;
+  }
+
+  return fallbackImage || null;
+};
+
 // ➕ Create Product
 export const createProduct = async (req, res) => {
   try {
@@ -31,7 +46,7 @@ export const createProduct = async (req, res) => {
       bulletPoints: safeJSONParse(bulletPoints, []),
       specifications: safeJSONParse(specifications, []),
       seoMeta: safeJSONParse(seoMeta, {}),
-      image: req.file ? `/uploads/${req.file.filename}` : image || null,
+      image: getImagePath(req, image),
     });
 
     await product.save();
@@ -86,12 +101,19 @@ export const updateProduct = async (req, res) => {
     if (specifications) product.specifications = safeJSONParse(specifications, []);
     if (seoMeta) product.seoMeta = safeJSONParse(seoMeta, {});
 
-    // ✅ Handle image replacement
+    // Handle image update
     if (req.file) {
-      if (product.image && fs.existsSync(`.${product.image}`)) {
+      // delete local image if exists
+      if (
+        product.image &&
+        product.image.startsWith("/uploads") &&
+        fs.existsSync(`.${product.image}`)
+      ) {
         fs.unlinkSync(`.${product.image}`);
       }
-      product.image = `/uploads/${req.file.filename}`;
+
+      // Save Cloudinary OR Local depending on query
+      product.image = getImagePath(req, image);
     } else if (image) {
       product.image = image;
     }
@@ -110,8 +132,10 @@ export const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    if (product.image && fs.existsSync(`.${product.image}`)) {
-      fs.unlinkSync(`.${product.image}`);
+    if (product.image && product.image.startsWith("/uploads")) {
+      if (fs.existsSync(`.${product.image}`)) {
+        fs.unlinkSync(`.${product.image}`);
+      }
     }
 
     await product.deleteOne();
